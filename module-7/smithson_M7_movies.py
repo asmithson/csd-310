@@ -25,60 +25,54 @@ try:
     db = mysql.connector.connect(**config)
     print(
         f"\n\n2713 Database user {config['user']} connected to MySQL "
-        f"on host {config['host']} with database {config["database"]}"
+        f"on host {config['host']} with database {config['database']}"
     )
-    
-    # Creating a cursor object with cursor () method
+
+    # Creating a cursor object
     cursor = db.cursor()
-    
+
     # ----- Query 1: Display all studio records -----
-    print("\n  -- DISPLAYING Studio RECORDS --")
-    cursor.execute("SELECT * FROM studio")
+    print("\n-- DISPLAYING Studio RECORDS --")
+    cursor.execute("SELECT * FROM studio;")
     studios = cursor.fetchall()
     for studio in studios:
         print(
             f"Studio ID: {studio[0]}\n"
             f"Studio Name: {studio[1]}\n"
         )
-        
+
     # ----- Query 2: Display all genre records -----
-    print("\n  -- DISPLAYING Genre RECORDS --")
-    cursor.execute("SELECT * FROM genre")
+    print("\n-- DISPLAYING Genre RECORDS --")
+    cursor.execute("SELECT * FROM genre;")
     genres = cursor.fetchall()
     for genre in genres:
         print(
             f"Genre ID: {genre[0]}\n"
             f"Genre Name: {genre[1]}\n"
         )
-        
-    # ----- Query 3: Display movie names with runtime less than 120 minutes -----
-    print("\n  -- DISPLAYING Short Film RECORDS --")
-    cursor.execute("""
-        SELECT film_name, film_runtime 
-        FROM film 
-        WHERE film_runtime < 120
-        ORDER BY film_lname;
-    """)
 
+    # ----- Query 3: Display movie names with runtime < 120 minutes -----
+    print("\n-- DISPLAYING Short Film RECORDS --")
+    cursor.execute("""
+        SELECT film_name, film_runtime
+        FROM film
+        WHERE film_runtime < 120
+        ORDER BY film_name;
+    """)
     short_films = cursor.fetchall()
     for name, runtime in short_films:
         print(f"Film Name: {name}\nRuntime: {runtime}\n")
-        
-    print() #blank line for spacing
-    
+
     # ----- Query 4: Display film names grouped by director -----
-    print("\n  -- DISPLAYING Director RECORDS in Order --")
-    cursor.execute("""    
-        SELECT film_director,
-            GROUP_CONCAT(film_name ORDER BY film_name SEPARATOR ', ') AS films
-    FROM film
-    GROUP BY film_director
-    ORDER BY film_director;
+    print("\n-- DISPLAYING Director RECORDS in Order --")
+    cursor.execute("""
+        SELECT film_name, film_director
+        FROM film
+        ORDER BY film_director;
     """)
-    
-    directors = cursor.fetchall()
-    for director_name, film in directors:
-        print(f"Director: {director_name}\nFilms: {films}\n")
+    director_records = cursor.fetchall()
+    for film_name, director_name in director_records:
+        print(f"Film Name: {film_name}\nDirector: {director_name}\n")
 
     input("\n\n  Press any key to continue...")
 
