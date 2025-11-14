@@ -11,47 +11,49 @@ connection = mysql.connector.connect(
 
 cursor = connection.cursor()
 
-def report_supplier_delivery():
-    print("\n---- SUPPLIER DELIVERY PERFORMANCE ----")
-
+def report_quarterly_sales():
+    print("\n---- QUARTERLY SALES REPORT ----")
+    
     query = """
     SELECT
-        s.Supplier_Name,
-        DATE_FORMAT(sh.Expected_Delivery, '%Y-%m') AS Delivery_Month,
-        COUNT(*) AS Total_Shipments,
-        SUM(CASE WHEN sh.Actual_Delivery <= sh.Expected_Delivery THEN 1 ELSE 0 END) AS On_Time,
-        SUM(CASE WHEN sh.Actual_Delivery > sh.Expected_Delivery THEN 1 ELSE 0 END) AS Late,
-        ROUND(AVG(DATEDIFF(sh.Actual_Delivery, sh.Expected_Delivery)), 1) AS Avg_Days_Late
-    FROM Shipment sh
-    JOIN Supplier s ON sh.Supplier_ID = s.Supplier_ID
-    GROUP BY s.Supplier_Name, Delivery_Month
-    ORDER BY s.Supplier_Name, Delivery_Month;
+        QUARTER(s.Shipment_Date) AS Quarter,
+        SUM(sd.Quantity) AS Total_Units_Sold,
+        SUM(sd.Quantity * sd.Unit_Price) AS Total_Revenue
+    FROM Shipment s
+    JOIN Shipment_Detail sd ON s.Shipment_ID = sd.Shipment_ID
+    GROUP BY Quarter
+    ORDER BY Quarter;
     """
-
+    
     cursor.execute(query)
     rows = cursor.fetchall()
+    
     if rows:
-        print("Supplier_Name | Delivery_Month | Total_Shipments | On_Time | Late | Avg_Days_Late")
+        print("Quarter | Total_Units_Sold | Total_Revenue")
         for row in rows:
             clean_row = []
             for value in row:
                 if isinstance(value, Decimal):
-                    value = float(value)
+                    # If the Decimal is a whole number (no decimals)
+                    if value == value.to_integral_value():
+                        value = int(value)
+                    else:                    
+                        value = float(value)
                 clean_row.append(value)
             
             print(tuple(clean_row))
     else:
-        print("No delivery records found.")
-
+        print("No quarterly sales records found.")
+        
 # Run the report
-report_supplier_delivery()
+report_quarterly_sales()
 
 # Close the connection
 cursor.close()
 connection.close()
 
 # References (for instructor only):
-# 
+#
 # Liang, Y. D. (2020). Introduction to Java programming and data structures (13th ed.,
 # Chapter 2: Elementary Programming). Pearson.
 #
@@ -63,3 +65,5 @@ connection.close()
 # W3Schools. (n.d.). Python for loops. https://www.w3schools.com/python/python_for_loops.asp
 #
 # W3Schools. (n.d.). Python isinstance(). https://www.w3schools.com/python/ref_func_isinstance.asp
+#
+# W3Schools. (n.d.). Python lists. https://www.w3schools.com/python/python_lists.asp

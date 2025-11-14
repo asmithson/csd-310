@@ -11,27 +11,29 @@ connection = mysql.connector.connect(
 
 cursor = connection.cursor()
 
-def report_supplier_delivery():
-    print("\n---- SUPPLIER DELIVERY PERFORMANCE ----")
-
+def report_wine_distribution():
+    print("\n---- WINE DISTRIBUTION & SALES ----")
+    
     query = """
     SELECT
-        s.Supplier_Name,
-        DATE_FORMAT(sh.Expected_Delivery, '%Y-%m') AS Delivery_Month,
-        COUNT(*) AS Total_Shipments,
-        SUM(CASE WHEN sh.Actual_Delivery <= sh.Expected_Delivery THEN 1 ELSE 0 END) AS On_Time,
-        SUM(CASE WHEN sh.Actual_Delivery > sh.Expected_Delivery THEN 1 ELSE 0 END) AS Late,
-        ROUND(AVG(DATEDIFF(sh.Actual_Delivery, sh.Expected_Delivery)), 1) AS Avg_Days_Late
-    FROM Shipment sh
-    JOIN Supplier s ON sh.Supplier_ID = s.Supplier_ID
-    GROUP BY s.Supplier_Name, Delivery_Month
-    ORDER BY s.Supplier_Name, Delivery_Month;
+        p.Wine_Type,
+        d.Distributor_Name,
+        SUM(sd.Quantity) AS Quantity_Sold,
+        SUM(sd.Quantity * sd.Unit_Price) AS Revenue,
+        QUARTER(s.Shipment_Date) AS Quarter
+    FROM Shipment s
+    JOIN Shipment_Detail sd ON s.Shipment_ID = sd.Shipment_ID
+    JOIN Product p ON sd.Product_ID = p.Product_ID
+    JOIN Distributor d ON s.Distributor_ID = d.Distributor_ID
+    GROUP BY p.Wine_Type, d.Distributor_Name, Quarter
+    ORDER BY p.Wine_Type, Revenue DESC;
     """
-
+    
     cursor.execute(query)
     rows = cursor.fetchall()
+    
     if rows:
-        print("Supplier_Name | Delivery_Month | Total_Shipments | On_Time | Late | Avg_Days_Late")
+        print("Wine_Type | Distributor_Name | Quantity_Sold | Revenue | Quarter")
         for row in rows:
             clean_row = []
             for value in row:
@@ -41,17 +43,17 @@ def report_supplier_delivery():
             
             print(tuple(clean_row))
     else:
-        print("No delivery records found.")
-
+        print("No distribution records found.")
+        
 # Run the report
-report_supplier_delivery()
+report_wine_distribution()
 
 # Close the connection
 cursor.close()
 connection.close()
 
 # References (for instructor only):
-# 
+#
 # Liang, Y. D. (2020). Introduction to Java programming and data structures (13th ed.,
 # Chapter 2: Elementary Programming). Pearson.
 #
@@ -59,7 +61,7 @@ connection.close()
 # Chapter 5: Loops). Pearson.
 #
 # W3Schools. (n.d.). Python casting. https://www.w3schools.com/python/python_casting.asp
-#
+# 
 # W3Schools. (n.d.). Python for loops. https://www.w3schools.com/python/python_for_loops.asp
 #
 # W3Schools. (n.d.). Python isinstance(). https://www.w3schools.com/python/ref_func_isinstance.asp
